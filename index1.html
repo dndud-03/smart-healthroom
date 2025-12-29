@@ -1,1 +1,147 @@
 # smart-healthroom
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>스마트 보건실 - 최종 업그레이드</title>
+<style>
+body { font-family: Arial; background:#eef2f5; padding:20px; }
+.box { background:white; padding:20px; border-radius:12px; max-width:600px; }
+h3 { margin-top:20px; }
+button { width:100%; padding:10px; margin-top:15px; }
+.result { white-space:pre-line; margin-top:20px; font-weight:bold; }
+</style>
+</head>
+<body>
+
+<h1>🏥 스마트 보건실</h1>
+
+<div class="box">
+
+<h3>🤒 내과적 증상</h3>
+체온 <input type="number" id="temp"> ℃<br>
+두통
+<select id="headache">
+<option value="0">없음</option>
+<option value="1">약함</option>
+<option value="2">보통</option>
+<option value="3">심함</option>
+</select><br>
+복통 <input type="checkbox" id="stomach"><br>
+메스꺼움 <input type="checkbox" id="nausea"><br>
+설사 <input type="checkbox" id="diarrhea"><br>
+인후통 <input type="checkbox" id="throat"><br>
+
+<h3>🤍 여성 건강</h3>
+생리 중 <input type="checkbox" id="period"><br>
+생리통 정도
+<select id="cramp">
+<option value="0">없음</option>
+<option value="1">약함</option>
+<option value="2">보통</option>
+<option value="3">심함</option>
+</select><br>
+
+<h3>🤕 외상</h3>
+찰과상 <input type="checkbox" id="scratch"><br>
+염좌(삐끗함) <input type="checkbox" id="sprain"><br>
+근육통 <input type="checkbox" id="muscle"><br>
+코피 <input type="checkbox" id="nosebleed"><br>
+
+<h3>🌡️ 환경 요인</h3>
+탈수 의심 <input type="checkbox" id="dehydration"><br>
+저혈당 의심 <input type="checkbox" id="hypo"><br>
+
+<h3>🚨 응급 신호</h3>
+출혈 <input type="checkbox" id="bleeding"><br>
+의식 저하 <input type="checkbox" id="conscious"><br>
+
+<button onclick="check()">결과 확인</button>
+<div class="result" id="result"></div>
+
+</div>
+
+<script>
+function check() {
+    let score = 0;
+    let actions = [];
+    let meds = [];
+    let care = [];
+    let suspected = [];
+
+    let temp = Number(document.getElementById("temp").value);
+    let headache = Number(document.getElementById("headache").value);
+    let cramp = Number(document.getElementById("cramp").value);
+
+    if (temp >= 38) score += 3;
+    score += headache;
+
+    if (stomach.checked || nausea.checked || diarrhea.checked) score += 2;
+    if (dehydration.checked || hypo.checked) score += 2;
+    if (bleeding.checked || conscious.checked) score += 5;
+
+    /* 🔎 의심 질환 판별 */
+    if ((temp >= 37.5 && throat.checked) || headache >= 2) {
+        suspected.push("감기 또는 상기도 감염");
+    }
+
+    if (stomach.checked && (diarrhea.checked || nausea.checked)) {
+        suspected.push("장염");
+    }
+
+    if (dehydration.checked && temp >= 37.5) {
+        suspected.push("탈수 또는 열로 인한 증상");
+    }
+
+    if (sprain.checked || muscle.checked) {
+        suspected.push("근육 또는 인대 손상");
+    }
+
+    if (scratch.checked || nosebleed.checked) {
+        suspected.push("경미한 외상");
+    }
+
+    if (period.checked && cramp >= 2) {
+        suspected.push("생리통");
+        care.push("보건실 침상에서 휴식");
+        care.push("복부 온찜질");
+        meds.push("진통 보조 약물 계열");
+    }
+
+    /* 💊 약물 안내 */
+    if (temp >= 38 || headache >= 2) meds.push("해열·진통 보조 약물 계열");
+    if (stomach.checked || diarrhea.checked) meds.push("소화기 관련 보조 약물 계열");
+    if (sprain.checked || muscle.checked) meds.push("근육·염좌 완화 외용제 계열");
+    if (scratch.checked || nosebleed.checked) meds.push("외용 소독·연고 계열");
+    if (dehydration.checked || hypo.checked) meds.push("수분 및 당분 보충");
+
+    /* 🧭 조치 단계 */
+    if (score <= 2) actions.push("즉시 교실 복귀 가능");
+    else if (score <= 4) actions.push("보건실 10~20분 휴식 후 복귀");
+    else if (score <= 6) actions.push("보건실 경과 관찰");
+    else if (score <= 8) actions.push("보건교사 또는 보호자 상담 권장");
+    else actions.push("조퇴 또는 병원 방문 권장");
+
+    let msg = `위험도 점수: ${score}점\n\n[조치 단계]\n- ${actions.join("\n- ")}`;
+
+    if (suspected.length > 0) {
+        msg += "\n\n[의심되는 상태]\n- " + [...new Set(suspected)].join("\n- ");
+    }
+
+    if (care.length > 0) {
+        msg += "\n\n[생활 관리]\n- " + [...new Set(care)].join("\n- ");
+    }
+
+    if (meds.length > 0) {
+        msg += "\n\n[약물 보조 안내]\n- " + [...new Set(meds)].join("\n- ");
+        msg += "\n(※ 교사 또는 보호자 확인 후)";
+    }
+
+    msg += "\n\n※ 본 시스템은 의료 진단·처방이 아닌 학교 보건 판단 보조 시스템입니다.";
+
+    document.getElementById("result").innerText = msg;
+}
+</script>
+
+</body>
+</html>
